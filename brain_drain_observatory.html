@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Drain Observatory | Global Human Capital Migration Portal</title>
+    
+    <!-- Embedded Base64 / Inline SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230b1329'/><path d='M30 40 Q50 15 70 40 Q85 60 70 80 Q50 95 30 80 Q15 60 30 40 Z' fill='none' stroke='%2338bdf8' stroke-width='6'/><circle cx='50' cy='50' r='12' fill='%232dd4bf'/><path d='M50 20 L50 38 M50 62 L50 80 M20 50 L80 50' stroke='%2338bdf8' stroke-width='4' stroke-linecap='round'/></svg>">
+    
+    <!-- External Libraries & CDN Sources -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        deepNavy: '#070b15',
+                        slateCard: '#0f172a',
+                        cardBorder: '#1e293b',
+                        accentSky: '#38bdf8',
+                        accentTeal: '#2dd4bf',
+                        accentIndigo: '#818cf8',
+                        accentRose: '#fb7185',
+                        accentAmber: '#fbbf24'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #070b15 0%, #0f172a 40%, #090d1a 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glass-panel-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel-hover:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.15);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070b15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+
+        .active-nav-link {
+            color: #38bdf8 !important;
+            background: rgba(56, 189, 248, 0.1);
+            border-bottom: 2px solid #38bdf8;
+        }
+
+        .page-view {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        // Define navigateTo immediately in global window scope to avoid race conditions
+        window.navigateTo = function(pageId) {
+            const pages = ['home', 'pushpull', 'impacts', 'simulator', 'solutions'];
+            
+            pages.forEach(p => {
+                const pageElem = document.getElementById('page-' + p);
+                const navElem = document.getElementById('nav-' + p);
+                if (pageElem) pageElem.classList.add('hidden');
+                if (navElem) navElem.classList.remove('active-nav-link');
+            });
+
+            const targetPage = document.getElementById('page-' + pageId);
+            const targetNav = document.getElementById('nav-' + pageId);
+            if (targetPage) targetPage.classList.remove('hidden');
+            if (targetNav) targetNav.classList.add('active-nav-link');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (pageId === 'impacts' && !window.chartsInitialized) {
+                if (typeof window.initCharts === 'function') {
+                    window.initCharts();
+                }
+            }
+        };
+
+        window.toggleMobileMenu = function() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) menu.classList.toggle('hidden');
+        };
+    </script>
+</head>
+<body class="antialiased text-slate-200 selection:bg-sky-500 selection:text-white min-h-screen flex flex-col justify-between">
+
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 sm:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center justify-between w-full md:w-auto">
+                <a href="javascript:void(0)" onclick="window.navigateTo('home')" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-teal-400 to-indigo-500 p-0.5 shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
+                        <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-sky-400">
+                            <i class="fa-solid fa-brain text-lg"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">
+                            BRAIN<span class="text-sky-400">DRAIN</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Global Observatory</span>
+                    </div>
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <button onclick="window.toggleMobileMenu()" class="md:hidden text-slate-300 hover:text-white p-2" aria-label="Toggle Navigation Menu">
+                    <i class="fa-solid fa-bars text-xl" id="menu-icon"></i>
+                </button>
+            </div>
+
+            <!-- Main Navigation Links -->
+            <nav id="nav-links" class="hidden md:flex flex-wrap items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm font-semibold w-full md:w-auto">
+                <button onclick="window.navigateTo('home')" id="nav-home" class="px-3.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2 active-nav-link">
+                    <i class="fa-solid fa-house text-sky-400"></i> Overview
+                </button>
+                <button onclick="window.navigateTo('pushpull')" id="nav-pushpull" class="px-3.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-split-up-and-left text-amber-400"></i> Push vs Pull
+                </button>
+                <button onclick="window.navigateTo('impacts')" id="nav-impacts" class="px-3.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-rose-400"></i> Sector Impacts
+                </button>
+                <button onclick="window.navigateTo('simulator')" id="nav-simulator" class="px-3.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-earth-americas text-teal-400"></i> Simulator & Quiz
+                </button>
+                <button onclick="window.navigateTo('solutions')" id="nav-solutions" class="px-3.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-indigo-400"></i> Solutions Hub
+                </button>
+            </nav>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden pt-4 pb-2 border-t border-slate-800/80 mt-3 space-y-2">
+            <button onclick="window.navigateTo('home'); window.toggleMobileMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-3">
+                <i class="fa-solid fa-house text-sky-400 w-5"></i> Overview & Fundamentals
+            </button>
+            <button onclick="window.navigateTo('pushpull'); window.toggleMobileMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-3">
+                <i class="fa-solid fa-arrows-split-up-and-left text-amber-400 w-5"></i> Push vs Pull Dynamics
+            </button>
+            <button onclick="window.navigateTo('impacts'); window.toggleMobileMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-rose-400 w-5"></i> Sector Impacts & Data
+            </button>
+            <button onclick="window.navigateTo('simulator'); window.toggleMobileMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-3">
+                <i class="fa-solid fa-earth-americas text-teal-400 w-5"></i> Simulator & Scenario Quiz
+            </button>
+            <button onclick="window.navigateTo('solutions'); window.toggleMobileMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-3">
+                <i class="fa-solid fa-lightbulb text-indigo-400 w-5"></i> Solutions & Policy Hub
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- PAGE 1: OVERVIEW & HOME -->
+        <section id="page-home" class="page-view space-y-12">
+            
+            <div class="relative overflow-hidden glass-panel rounded-3xl p-8 sm:p-12 border-slate-800/80">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 max-w-3xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold mb-6">
+                        <i class="fa-solid fa-circle-nodes"></i> Global Human Capital Migration Observatory
+                    </div>
+                    
+                    <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                        Brain Drain: Understanding the Global <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400">Exodus of Talent</span>
+                    </h1>
+
+                    <p class="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed font-normal">
+                        Human Capital Flight occurs when highly skilled professionals—physicians, software engineers, scientists, and university academics—emigrate from developing regions to high-income economies. Explore the deep-seated economic, institutional, and social mechanisms driving this movement.
+                    </p>
+
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <button onclick="window.navigateTo('pushpull')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-teal-400 text-slate-950 font-bold hover:shadow-lg hover:shadow-sky-500/20 transition-all text-sm">
+                            Explore Push & Pull Factors <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                        <button onclick="window.navigateTo('simulator')" class="px-6 py-3 rounded-xl glass-panel text-slate-200 font-semibold hover:border-slate-500 transition-all text-sm">
+                            Run Regional Simulator
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Global Metrics Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-2xl border-slate-800/80 glass-panel-hover">
+                    <div class="flex items-center justify-between text-sky-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Global Skilled Migrants</span>
+                        <i class="fa-solid fa-passport text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-white">280+ <span class="text-sm font-normal text-slate-400">Million</span></div>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">International migrants worldwide, with over 35% holding tertiary higher education degrees.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl border-slate-800/80 glass-panel-hover">
+                    <div class="flex items-center justify-between text-teal-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Small Island States Loss</span>
+                        <i class="fa-solid fa-island-tropical text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-teal-400">up to 70%</div>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Of tertiary graduates in Small Island Developing States (SIDS) live and work abroad.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl border-slate-800/80 glass-panel-hover">
+                    <div class="flex items-center justify-between text-rose-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Health Worker Deficit</span>
+                        <i class="fa-solid fa-user-doctor text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-rose-400">10.2 <span class="text-sm font-normal text-slate-400">Million</span></div>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Projected global shortage of healthcare workers by 2030, primarily affecting Africa & South Asia.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl border-slate-800/80 glass-panel-hover">
+                    <div class="flex items-center justify-between text-indigo-400 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Annual Remittances</span>
+                        <i class="fa-solid fa-money-bill-transfer text-xl"></i>
+                    </div>
+                    <div class="text-3xl font-extrabold text-indigo-400">$860 <span class="text-sm font-normal text-slate-400">Billion</span></div>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Global remittance flows back to low and middle-income nations in recent financial cycles.</p>
+                </div>
+            </div>
+
+            <!-- Conceptual Foundations Section -->
+            <div class="glass-panel p-8 rounded-3xl border-slate-800/80 space-y-6">
+                <div class="border-b border-slate-800 pb-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-book-bookmark text-sky-400"></i> Defining Human Capital Flight
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Core terminology and economic paradigms governing international talent flows.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+                        <h3 class="font-bold text-sky-400 text-base mb-2">1. Brain Drain</h3>
+                        <p class="text-slate-300 leading-relaxed text-xs">
+                            The asymmetric unidirectional outflow of human capital from developing origins to developed destination economies, depleting domestic institutional capacity.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+                        <h3 class="font-bold text-teal-400 text-base mb-2">2. Brain Waste</h3>
+                        <p class="text-slate-300 leading-relaxed text-xs">
+                            Occurs when highly qualified immigrants work in low-skilled occupations abroad due to non-recognition of foreign qualifications or licensing barriers.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+                        <h3 class="font-bold text-indigo-400 text-base mb-2">3. Brain Circulation</h3>
+                        <p class="text-slate-300 leading-relaxed text-xs">
+                            The circular migration pattern where skilled expats return periodically or share knowledge, transforming a permanent loss into a dynamic "Brain Gain."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 2: PUSH VS PULL FACTORS -->
+        <section id="page-pushpull" class="page-view hidden space-y-10">
+            
+            <div class="glass-panel p-8 rounded-3xl border-slate-800/80">
+                <div class="max-w-3xl">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">Socioeconomic Drivers</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Push vs. Pull Factor Matrix</h2>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        Migration decisions are rarely singular. They stem from a complex calculus comparing negative structural forces in origin countries (Push) against attractive opportunities in host nations (Pull).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Matrix Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- Push Factors Side -->
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-rose-900/40 bg-rose-950/10 space-y-6">
+                    <div class="flex items-center gap-3 border-b border-rose-900/30 pb-4">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Push Factors (Origin Country)</h3>
+                            <p class="text-xs text-rose-300/70">Structural constraints compelling professionals to leave</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-rose-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-money-bill-wave mr-1.5"></i> Salary Disparities & Inflation</span>
+                                <span class="text-[10px] bg-rose-500/20 px-2 py-0.5 rounded text-rose-300">Economic</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                Professional salaries in developing nations often fail to match rising inflation or costs of living. A medical officer in West Africa may earn 1/10th of the salary offered in Northern Europe.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-rose-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-vial-circle-exclamation mr-1.5"></i> Poor Research Infrastructure</span>
+                                <span class="text-[10px] bg-rose-500/20 px-2 py-0.5 rounded text-rose-300">Academic</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                Absence of modern laboratory equipment, zero institutional research funding, and limited journal subscriptions prevent scientists from conducting cutting-edge work.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-rose-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-landmark mr-1.5"></i> Political & Security Instability</span>
+                                <span class="text-[10px] bg-rose-500/20 px-2 py-0.5 rounded text-rose-300">Institutional</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                Bureaucratic corruption, lack of meritocracy in civil service appointments, civil unrest, and personal security threats accelerate top-tier emigration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pull Factors Side -->
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-teal-900/40 bg-teal-950/10 space-y-6">
+                    <div class="flex items-center gap-3 border-b border-teal-900/30 pb-4">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-magnet"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Pull Factors (Destination Nation)</h3>
+                            <p class="text-xs text-teal-300/70">Attractive catalysts drawing global talent</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-teal-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-vault mr-1.5"></i> Competitive Pay & Social Security</span>
+                                <span class="text-[10px] bg-teal-500/20 px-2 py-0.5 rounded text-teal-300">Economic</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                High purchasing power, stable currencies, robust retirement pensions, and comprehensive health insurance schemes for workers and dependents.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-teal-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-rocket mr-1.5"></i> Fast-Track Career & VC Ecosystems</span>
+                                <span class="text-[10px] bg-teal-500/20 px-2 py-0.5 rounded text-teal-300">Professional</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                Access to world-class venture capital funds, patent infrastructure, global conferences, mentorship networks, and rapid promotional trajectories.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                            <div class="font-bold text-teal-400 text-sm flex items-center justify-between">
+                                <span><i class="fa-solid fa-graduation-cap mr-1.5"></i> Quality Education for Offspring</span>
+                                <span class="text-[10px] bg-teal-500/20 px-2 py-0.5 rounded text-teal-300">Social</span>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed">
+                                High-performing public school systems, safe urban environments, and clear paths to permanent residency or citizenship for family members.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Comparison Table -->
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80">
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-amber-400"></i> Sectoral Income Disparities (USD Benchmark)
+                </h3>
+                <p class="text-xs text-slate-400 mb-6">Approximate average annual starting compensation across regions before tax adjustments.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 uppercase font-bold">
+                                <th class="py-3 px-4">Profession</th>
+                                <th class="py-3 px-4">Low-Income Origin Avg</th>
+                                <th class="py-3 px-4">Middle-Income Origin Avg</th>
+                                <th class="py-3 px-4">High-Income Destination Avg</th>
+                                <th class="py-3 px-4">Wage Gap Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-white">General Practitioner (MD)</td>
+                                <td class="py-3 px-4 text-rose-400">$3,600 / yr</td>
+                                <td class="py-3 px-4 text-amber-400">$18,000 / yr</td>
+                                <td class="py-3 px-4 text-teal-400">$180,000 / yr</td>
+                                <td class="py-3 px-4 font-bold text-sky-400">up to 50x</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-white">Senior Software Engineer</td>
+                                <td class="py-3 px-4 text-rose-400">$4,800 / yr</td>
+                                <td class="py-3 px-4 text-amber-400">$24,000 / yr</td>
+                                <td class="py-3 px-4 text-teal-400">$140,000 / yr</td>
+                                <td class="py-3 px-4 font-bold text-sky-400">up to 29x</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-white">University Academic / PhD</td>
+                                <td class="py-3 px-4 text-rose-400">$3,000 / yr</td>
+                                <td class="py-3 px-4 text-amber-400">$15,000 / yr</td>
+                                <td class="py-3 px-4 text-teal-400">$95,000 / yr</td>
+                                <td class="py-3 px-4 font-bold text-sky-400">up to 31x</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 3: SECTOR IMPACTS & DATA -->
+        <section id="page-impacts" class="page-view hidden space-y-10">
+            
+            <div class="glass-panel p-8 rounded-3xl border-slate-800/80">
+                <div class="max-w-3xl">
+                    <span class="text-xs font-bold text-rose-400 uppercase tracking-widest">Socioeconomic Costs</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Sectoral Impacts & Global Analytics</h2>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        When skilled workers leave, the loss compounds across multiple critical national pillars. Explore key sector crises alongside empirical migration analytics.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Deep Dive Sector Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl">
+                        <i class="fa-solid fa-house-medical-flag"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">Healthcare System Weakening</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        In many Sub-Saharan African and Caribbean nations, over 50% of locally trained doctors leave within 5 years of graduation. This leaves rural clinics unstaffed, elevates maternal and infant mortality rates, and paralyzes epidemic prevention programs.
+                    </p>
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-rose-300">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> WHO Ethical Warning: Developing nations subsidize rich world healthcare by approximately $5 Billion annually through uncompensated education costs.
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 text-xl">
+                        <i class="fa-solid fa-atom"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">STEM & Academic Stagnation</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Universities in developing nations lose experienced professors and research mentors. Without senior leadership, postgraduate programs decline, domestic patents drop, and local industries remain reliant on foreign technology imports.
+                    </p>
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-sky-300">
+                        <i class="fa-solid fa-lightbulb mr-1"></i> Innovation Void: Less than 1.5% of international patent applications originate from low-income developing nations suffering severe brain drain.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart.js Interactive Visualizations Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="glass-panel p-6 rounded-3xl border-slate-800/80 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-base font-bold text-white mb-1">Skilled Emigrants Distribution by Sector</h4>
+                        <p class="text-xs text-slate-400 mb-6">Percentage share of high-skilled emigrants across major professional fields.</p>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="chartSectorApp"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-3xl border-slate-800/80 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-base font-bold text-white mb-1">Graduate Emigration Rate by Region (%)</h4>
+                        <p class="text-xs text-slate-400 mb-6">Share of tertiary-educated workforce living outside their native country.</p>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="chartRegionApp"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 4: SIMULATOR & SCENARIO QUIZ -->
+        <section id="page-simulator" class="page-view hidden space-y-10">
+            
+            <div class="glass-panel p-8 rounded-3xl border-slate-800/80">
+                <div class="max-w-3xl">
+                    <span class="text-xs font-bold text-teal-400 uppercase tracking-widest">Interactive Analytics</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Regional Simulator & Scenario Quiz</h2>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        Select regional archetypes to simulate domestic vulnerability metrics, then test your policy problem-solving skills with our interactive scenario challenge.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Regional Simulator Widget -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <div class="lg:col-span-4 space-y-3">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Select Region Profile</label>
+                    
+                    <button onclick="window.runSimulation('lowIncome')" id="sim-btn-lowIncome" class="sim-selector-btn w-full p-4 rounded-2xl text-left glass-panel border-sky-500 flex items-center justify-between transition-all">
+                        <div>
+                            <div class="font-bold text-white text-sm">Low-Income Developing Nation</div>
+                            <div class="text-xs text-slate-400">Sub-Saharan / South Asia Profile</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-sky-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="window.runSimulation('emerging')" id="sim-btn-emerging" class="sim-selector-btn w-full p-4 rounded-2xl text-left glass-panel border-slate-800 flex items-center justify-between transition-all hover:border-slate-700">
+                        <div>
+                            <div class="font-bold text-white text-sm">Emerging Middle-Income Economy</div>
+                            <div class="text-xs text-slate-400">Latin America / Eastern Europe Profile</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                    </button>
+
+                    <button onclick="window.runSimulation('sids')" id="sim-btn-sids" class="sim-selector-btn w-full p-4 rounded-2xl text-left glass-panel border-slate-800 flex items-center justify-between transition-all hover:border-slate-700">
+                        <div>
+                            <div class="font-bold text-white text-sm">Small Island Developing State (SIDS)</div>
+                            <div class="text-xs text-slate-400">Caribbean / Pacific Islands Profile</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="lg:col-span-8 glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4">
+                        <div>
+                            <span id="sim-output-type" class="text-xs font-bold text-sky-400 uppercase tracking-wider">Low-Income Developing Profile</span>
+                            <h3 id="sim-output-title" class="text-2xl font-bold text-white mt-0.5">Sub-Saharan Africa & South Asia Archetype</h3>
+                        </div>
+                        <span id="sim-output-risk" class="mt-2 sm:mt-0 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                            Critical Brain Drain Risk
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-xs text-slate-400">Graduate Emigration Rate</div>
+                            <div id="sim-val-rate" class="text-2xl font-black text-sky-400 mt-1">38.5%</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">Of tertiary educated cohort</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-xs text-slate-400">Physician Coverage Loss</div>
+                            <div id="sim-val-doc" class="text-2xl font-black text-rose-400 mt-1">1 : 4,200</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">Doctor-to-patient ratio</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <div class="text-xs text-slate-400">Annual Tax Revenue Drain</div>
+                            <div id="sim-val-tax" class="text-2xl font-black text-teal-400 mt-1">$1.4B</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">Direct tax fiscal loss</div>
+                        </div>
+                    </div>
+
+                    <p id="sim-val-desc" class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                        High emigration rates in essential public health and education sectors cause severe domestic service bottlenecks, while remittances compensate mainly at household consumption levels.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quiz Component -->
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 max-w-4xl mx-auto space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-question text-amber-400 text-lg"></i>
+                        <h3 class="text-lg font-bold text-white">Policy Decision Challenge</h3>
+                    </div>
+                    <span id="quiz-score-display" class="text-xs font-semibold text-slate-400">Score: 0 / 1</span>
+                </div>
+
+                <p class="text-sm font-semibold text-slate-200">
+                    Scenario: Your government faces a severe 40% exodus of newly graduated medical officers to overseas hospitals each year. Which policy approach achieves sustainable human capital retention without violating international human rights?
+                </p>
+
+                <div class="space-y-3 text-xs">
+                    <button onclick="window.handleQuizAnswer(1)" class="quiz-btn w-full p-4 rounded-xl text-left bg-slate-900/80 border border-slate-800 hover:border-sky-500 transition-all text-slate-300">
+                        <strong class="text-sky-400 mr-2">Option A:</strong> Enact strict exit passport bans and mandatory 15-year uncompensated government bonding for all medical graduates.
+                    </button>
+                    
+                    <button onclick="window.handleQuizAnswer(2)" class="quiz-btn w-full p-4 rounded-xl text-left bg-slate-900/80 border border-slate-800 hover:border-sky-500 transition-all text-slate-300">
+                        <strong class="text-sky-400 mr-2">Option B:</strong> Modernize rural medical facilities, provide competitive performance incentives, and establish dual-appointment virtual diaspora teaching links.
+                    </button>
+
+                    <button onclick="window.handleQuizAnswer(3)" class="quiz-btn w-full p-4 rounded-xl text-left bg-slate-900/80 border border-slate-800 hover:border-sky-500 transition-all text-slate-300">
+                        <strong class="text-sky-400 mr-2">Option C:</strong> Privatize all public medical universities and shift all health funding to international remittance tax collection.
+                    </button>
+                </div>
+
+                <div id="quiz-feedback" class="hidden p-4 rounded-xl text-xs leading-relaxed"></div>
+            </div>
+        </section>
+
+        <!-- PAGE 5: SOLUTIONS & ACTION HUB -->
+        <section id="page-solutions" class="page-view hidden space-y-10">
+            
+            <div class="glass-panel p-8 rounded-3xl border-slate-800/80">
+                <div class="max-w-3xl">
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Policy Blueprint</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Solutions & Policy Action Hub</h2>
+                    <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                        Reversing brain drain requires transitioning from passive talent loss to active "Brain Circulation" through structured policy frameworks.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Three Pillars of Solutions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 text-xl">
+                        <i class="fa-solid fa-landmark-flag"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">1. Domestic Retention</h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-sky-400 mt-0.5"></i>
+                            <span><strong>Merit-Based Compensation:</strong> Standardize competitive public sector wage structures for doctors and researchers.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-sky-400 mt-0.5"></i>
+                            <span><strong>R&D Tax Credits:</strong> Incentivize private sector tech labs, incubators, and startup ecosystems.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xl">
+                        <i class="fa-solid fa-arrows-spin"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">2. Brain Circulation</h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-teal-400 mt-0.5"></i>
+                            <span><strong>Virtual Knowledge Networks:</strong> Tele-medicine and remote guest lecturing by expat experts without permanent relocation.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-teal-400 mt-0.5"></i>
+                            <span><strong>Diaspora Bonds:</strong> Secure sovereign investment bonds enabling overseas citizens to fund domestic infrastructure.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">3. Global Governance</h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-indigo-400 mt-0.5"></i>
+                            <span><strong>WHO Ethical Recruitment:</strong> Enforce ethical recruitment codes preventing active poaching from vulnerable health systems.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-indigo-400 mt-0.5"></i>
+                            <span><strong>Bilateral Training Bilaterals:</strong> Destination countries fund educational capacity in origin countries to offset intake.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Interactive Custom Policy Action Builder -->
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border-slate-800/80 space-y-6">
+                <div>
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Interactive Policy Builder</span>
+                    <h3 class="text-xl font-bold text-white mt-1">Formulate a Custom National Retention Strategy</h3>
+                    <p class="text-xs text-slate-400">Select policy levers below to calculate projected talent retention improvement.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <label class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-sky-500/50 transition-all">
+                        <input type="checkbox" id="policy-1" onchange="window.calculatePolicyImpact()" class="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-700">
+                        <div>
+                            <div class="text-xs font-bold text-white">Research Infrastructure Fund</div>
+                            <div class="text-[10px] text-slate-400">+15% Retention Impact</div>
+                        </div>
+                    </label>
+
+                    <label class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-teal-500/50 transition-all">
+                        <input type="checkbox" id="policy-2" onchange="window.calculatePolicyImpact()" class="w-4 h-4 rounded text-teal-500 focus:ring-teal-500 bg-slate-950 border-slate-700">
+                        <div>
+                            <div class="text-xs font-bold text-white">Medical Salary Parity Adjustment</div>
+                            <div class="text-[10px] text-slate-400">+25% Retention Impact</div>
+                        </div>
+                    </label>
+
+                    <label class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-indigo-500/50 transition-all">
+                        <input type="checkbox" id="policy-3" onchange="window.calculatePolicyImpact()" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-slate-950 border-slate-700">
+                        <div>
+                            <div class="text-xs font-bold text-white">Diaspora Knowledge Exchange Platform</div>
+                            <div class="text-[10px] text-slate-400">+20% Circulation Gain</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <div class="text-xs text-slate-400">Projected Talent Retention Boost</div>
+                        <div id="policy-score-text" class="text-2xl font-black text-sky-400 mt-0.5">+0% Index Boost</div>
+                    </div>
+                    <div id="policy-summary" class="text-xs text-slate-300 text-center sm:text-right">
+                        Select policy interventions above to simulate effectiveness.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="glass-panel border-t border-slate-800/80 mt-16 py-8 text-slate-400 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <span class="font-extrabold text-slate-200 tracking-tight">
+                    BRAIN<span class="text-sky-400">DRAIN</span> Observatory
+                </span>
+            </div>
+
+            <p>&copy; 2026 Brain Drain Observatory. Designed for human capital policy research.</p>
+
+            <div class="flex gap-4 text-slate-500">
+                <a href="javascript:void(0)" onclick="window.navigateTo('home')" class="hover:text-slate-300 transition-colors">Overview</a>
+                <a href="javascript:void(0)" onclick="window.navigateTo('solutions')" class="hover:text-slate-300 transition-colors">Solutions</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simulation datasets
+        const simData = {
+            lowIncome: {
+                type: "Low-Income Developing Profile",
+                title: "Sub-Saharan Africa & South Asia Archetype",
+                risk: "Critical Brain Drain Risk",
+                rate: "38.5%",
+                doc: "1 : 4,200",
+                tax: "$1.4B",
+                desc: "Severe health worker shortages present immediate public health bottlenecks, while high international remittances provide household safety nets."
+            },
+            emerging: {
+                type: "Emerging Middle-Income Profile",
+                title: "Latin America & Eastern Europe Archetype",
+                risk: "Moderate Brain Drain Risk",
+                rate: "22.0%",
+                doc: "1 : 1,800",
+                tax: "$3.8B",
+                desc: "Tech developers and engineers migrate to Silicon Valley and European hubs, causing STEM innovation bottlenecks despite strong university outputs."
+            },
+            sids: {
+                type: "Small Island Developing State Profile",
+                title: "Caribbean & Pacific Islands Archetype",
+                risk: "Existential Talent Drain",
+                rate: "71.4%",
+                doc: "1 : 6,800",
+                tax: "$420M",
+                desc: "Extreme geographical isolation and tiny domestic job markets compel over 70% of tertiary graduates to migrate, creating acute institutional challenges."
+            }
+        };
+
+        window.runSimulation = function(key) {
+            const d = simData[key];
+            if (!d) return;
+            
+            document.querySelectorAll('.sim-selector-btn').forEach(b => {
+                b.className = "sim-selector-btn w-full p-4 rounded-2xl text-left glass-panel border-slate-800 flex items-center justify-between transition-all hover:border-slate-700";
+            });
+            const activeBtn = document.getElementById(`sim-btn-${key}`);
+            if (activeBtn) {
+                activeBtn.className = "sim-selector-btn w-full p-4 rounded-2xl text-left glass-panel border-sky-500 flex items-center justify-between transition-all";
+            }
+
+            document.getElementById('sim-output-type').innerText = d.type;
+            document.getElementById('sim-output-title').innerText = d.title;
+            document.getElementById('sim-output-risk').innerText = d.risk;
+            document.getElementById('sim-val-rate').innerText = d.rate;
+            document.getElementById('sim-val-doc').innerText = d.doc;
+            document.getElementById('sim-val-tax').innerText = d.tax;
+            document.getElementById('sim-val-desc').innerText = d.desc;
+        };
+
+        window.handleQuizAnswer = function(option) {
+            const feedback = document.getElementById('quiz-feedback');
+            const scoreDisplay = document.getElementById('quiz-score-display');
+            if (!feedback || !scoreDisplay) return;
+            
+            feedback.classList.remove('hidden');
+
+            if (option === 2) {
+                feedback.className = "p-4 rounded-xl text-xs leading-relaxed bg-teal-950/60 border border-teal-500/40 text-teal-200";
+                feedback.innerHTML = "<strong><i class='fa-solid fa-circle-check mr-1'></i> Correct!</strong> Sustainable retention combines workplace modernization, fair pay, and circular diaspora collaboration rather than coercive travel restrictions.";
+                scoreDisplay.innerText = "Score: 1 / 1";
+            } else {
+                feedback.className = "p-4 rounded-xl text-xs leading-relaxed bg-rose-950/60 border border-rose-500/40 text-rose-200";
+                feedback.innerHTML = "<strong><i class='fa-solid fa-circle-xmark mr-1'></i> Incorrect.</strong> Coercive bans violate international human rights standards and exacerbate illicit flight. Modern policy emphasizes structural retention and diaspora exchange.";
+                scoreDisplay.innerText = "Score: 0 / 1";
+            }
+        };
+
+        window.calculatePolicyImpact = function() {
+            const p1 = document.getElementById('policy-1')?.checked;
+            const p2 = document.getElementById('policy-2')?.checked;
+            const p3 = document.getElementById('policy-3')?.checked;
+
+            let score = 0;
+            if (p1) score += 15;
+            if (p2) score += 25;
+            if (p3) score += 20;
+
+            const scoreText = document.getElementById('policy-score-text');
+            const summary = document.getElementById('policy-summary');
+
+            if (scoreText) scoreText.innerText = `+${score}% Index Boost`;
+
+            if (summary) {
+                if (score === 0) {
+                    summary.innerText = "Select policy interventions above to simulate effectiveness.";
+                } else if (score < 30) {
+                    summary.innerText = "Moderate initial impact. Consider combining financial and institutional levers.";
+                } else if (score < 55) {
+                    summary.innerText = "Strong national policy framework balancing domestic pay and academic infrastructure.";
+                } else {
+                    summary.innerText = "Comprehensive Gold-Standard Retention & Circulation Blueprint!";
+                }
+            }
+        };
+
+        window.initCharts = function() {
+            if (window.chartsInitialized || typeof Chart === 'undefined') return;
+            window.chartsInitialized = true;
+
+            try {
+                const ctx1 = document.getElementById('chartSectorApp')?.getContext('2d');
+                if (ctx1) {
+                    new Chart(ctx1, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Healthcare & Medicine', 'Software & Engineering', 'Academia & Research', 'Finance & Commerce', 'Other Technical'],
+                            datasets: [{
+                                data: [36, 31, 16, 11, 6],
+                                backgroundColor: ['#fb7185', '#38bdf8', '#2dd4bf', '#818cf8', '#64748b'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: '#94a3b8', font: { size: 10, family: 'Plus Jakarta Sans' } }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                const ctx2 = document.getElementById('chartRegionApp')?.getContext('2d');
+                if (ctx2) {
+                    new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Small Island States', 'Sub-Saharan Africa', 'Central America', 'South Asia', 'Eastern Europe'],
+                            datasets: [{
+                                label: '% Higher Education Graduates Living Abroad',
+                                data: [71, 38, 28, 22, 18],
+                                backgroundColor: '#38bdf8',
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                    ticks: { color: '#94a3b8' }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: '#94a3b8' }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn("Chart rendering skipped:", err);
+            }
+        };
+
+        // Initialize default view on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            window.navigateTo('home');
+        });
+    </script>
+</body>
+</html>
